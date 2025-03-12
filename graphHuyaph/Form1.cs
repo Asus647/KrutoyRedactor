@@ -23,7 +23,7 @@ namespace graphHuyaph
         Line cur_line;
         Point start;
         string cur_mode = "edit";
-        string color = "red";
+        Color color = Color.Red;
         int width = 10;
 
         /// <summary>
@@ -66,63 +66,63 @@ namespace graphHuyaph
             {
                 start = e.Location;
                 cur_shape = new Ellipse(0, 0, start.X, start.Y);
-                cur_shape.Color = Color.FromName(color);
+                cur_shape.Color = color;
                 shapes.Add(cur_shape);
             }
             else if (cur_mode == "rect")
             {
                 start = e.Location;
                 cur_shape = new Rectangl(0, 0, start.X, start.Y);
-                cur_shape.Color = Color.FromName(color);
+                cur_shape.Color = color;
                 shapes.Add(cur_shape);
             }
             else if (cur_mode == "crc")
             {
                 start = e.Location;
                 cur_shape = new Circle(0, 0, start.X, start.Y);
-                cur_shape.Color = Color.FromName(color);
+                cur_shape.Color = color;
                 shapes.Add(cur_shape);
             }
             else if (cur_mode == "sqr")
             {
                 start = e.Location;
                 cur_shape = new Square(0, 0, start.X, start.Y);
-                cur_shape.Color = Color.FromName(color);
+                cur_shape.Color = color;
                 shapes.Add(cur_shape);
             }
             else if (cur_mode == "rtrg")
             {
                 start = e.Location;
                 cur_shape = new RightTriangle(0, 0, start.X, start.Y);
-                cur_shape.Color = Color.FromName(color);
+                cur_shape.Color = color;
                 shapes.Add(cur_shape);
             }
             else if (cur_mode == "trg")
             {
                 start = e.Location;
                 cur_shape = new Triangle(0, 0, start.X, start.Y);
-                cur_shape.Color = Color.FromName(color);
+                cur_shape.Color = color;
                 shapes.Add(cur_shape);
             }
             else if (cur_mode == "str")
             {
                 start = e.Location;
                 cur_shape = new Star(0, 0, start.X, start.Y);
-                cur_shape.Color = Color.FromName(color);
+                cur_shape.Color = color;
                 shapes.Add(cur_shape);
             }
             else if (cur_mode == "pen")
             {
                 cur_pencil = new Pencil();
                 cur_pencil.Width = width;
-                cur_pencil.Color = Color.FromName(color);
+                cur_pencil.Color = color;
                 cur_pencil.AddPoint(e.X, e.Y);
             }
             else if (cur_mode == "line")
             {
                 cur_line = new Line();
                 cur_line.Width = width;
-                cur_line.Color = Color.FromName(color);
+                cur_line.Color = color;
                 cur_line.start = e.Location;
             }
         }
@@ -238,37 +238,22 @@ namespace graphHuyaph
                 cur_mode = mods.SelectedItems[0].Text;
             }
         }
+
         /// <summary>
-        /// Выбор цвета для рисования
+        /// Очистка 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void colors_SelectedIndexChanged(object sender, EventArgs e)
+        private void clear_Click(object sender, EventArgs e)
         {
-            if (cur_shape != null && colors.SelectedItems.Count > 0 && (cur_mode == "edit" || cur_mode == "editSize"))
-            {
-                color = colors.SelectedItems[0].Text;
-                cur_shape.Color = Color.FromName(color);
-                draw_panel.Invalidate();
-            }
-            else if (colors.SelectedItems.Count > 0)
-            {
-                color = colors.SelectedItems[0].Text;
-                draw_panel.Invalidate();
-            }
-        }
-        /// <summary>
-        /// Удаление выбранной фигуры
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void delete_Click(object sender, EventArgs e)
-        {
-            if (cur_shape != null)
-            {
-                shapes.Remove(cur_shape);
-                draw_panel.Invalidate();
-            }
+            cur_line = null;
+            cur_pencil = null;
+            pencils.Clear();
+            shapes.Clear();
+            lines.Clear();
+            draw_panel.Image = null;
+            draw_panel.Invalidate();
+            
         }
 
         //сдлеать выбор места и имени файла
@@ -292,21 +277,47 @@ namespace graphHuyaph
 
 
 
-        //сдлеать выбор места и имени файла
+        /// <summary>
+        /// Сохранение информации о фигурах
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void create_func_info_Click(object sender, EventArgs e)
         {
             Parser p = new Parser();
-            p.CreateParseInfo(ref shapes, ref pencils, ref lines, "balabama.txt");
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Title = "Выберите место для сохранения файла";
+            sfd.Filter = "Text files |*.txt";
+            sfd.FileName = "default.txt";
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = sfd.FileName;
+                p.CreateParseInfo(ref shapes, ref pencils, ref lines, filePath);
+            }
+            else return;
         }
 
-        //сдлеать выбор файла
+        /// <summary>
+        /// Загрузка информации о фигурах
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void loadFunc_Click(object sender, EventArgs e)
         {
             Parser p = new Parser();
-            shapes = p.ParseFuncObjects("balabama.txt");
-            pencils = p.ParseFuncObjectsPens("balabama.txt");
-            lines = p.ParseFuncObjectsLines("balabama.txt");
-            draw_panel.Invalidate();
+            OpenFileDialog fd = new OpenFileDialog();
+            fd.Title = "Выберите файл";
+            fd.Filter = "Text files |*.txt";
+            if (fd.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = fd.FileName;
+                shapes = p.ParseFuncObjects(filePath);
+                pencils = p.ParseFuncObjectsPens(filePath);
+                lines = p.ParseFuncObjectsLines(filePath);
+                draw_panel.Invalidate();
+            }
+            else return;
+            
         }
         /// <summary>
         /// Изменение толщины пера
@@ -327,10 +338,15 @@ namespace graphHuyaph
         {
             if (colorDialog1.ShowDialog() == DialogResult.OK)
             {
-                color = colorDialog1.Color.Name;
+                color = colorDialog1.Color;
+                ((Button)sender).BackColor = color;
             }
         }
-
+        /// <summary>
+        /// Загрузка изображения
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
             string path = "";
@@ -345,6 +361,110 @@ namespace graphHuyaph
             else
             {
                 return;
+            }
+        }
+
+        /// <summary>
+        /// Выбор черного цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button8_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор белого цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button3_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор синего цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button4_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор красного цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button5_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор желтого цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button6_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор зеленого цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button7_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор оранжевого цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button9_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор голубого цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button10_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор розового цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button11_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Выбор фиолетового цвета
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button12_Click(object sender, EventArgs e)
+        {
+            color = ((Button)sender).BackColor;
+        }
+        /// <summary>
+        /// Удаляет выбранную фигуру
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void delete_Click(object sender, EventArgs e)
+        {
+            if (cur_shape != null)
+            {
+                shapes.Remove(cur_shape);
+                draw_panel.Invalidate();
             }
         }
     }
